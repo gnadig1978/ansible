@@ -1,0 +1,12 @@
+---
+ - hosts: Hosts
+   become: true
+   tasks:
+    - name: "Copy the SSSD script and execute"
+      copy: 
+        src: /var/www/html/software/rpms/sssd-pamupdate.sh 
+        dest: /root/sssd-pamupdate.sh
+        #remote_src: yes
+        mode: 0755
+    - name: Run the sssd script
+      command: bash /root/sssd-pamupdate.sh
