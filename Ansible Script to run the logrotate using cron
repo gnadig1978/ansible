@@ -1,0 +1,14 @@
+# Ansible Script to run the logrotate using cron every day @ 3:30 AM 
+
+---
+- hosts: All
+  become: yes
+  tasks:
+  - name: Configure Logrotate script as Cron job
+    cron:
+      user: "tomcat"
+      day: "*"
+      hour: "03"
+      minute: "30"
+      name: "Run the Logrotate script"
+      job: "/opt/services/tomcat/bin/logs_rotate.sh > /tmp/logrotate.log"
