@@ -1,0 +1,9 @@
+---
+- hosts: servers
+  become: yes
+  tasks:
+  - name: Remove a line from the file
+    lineinfile:
+      path: /etc/yum.conf
+      state: absent
+      regexp: 'proxy=http://your proxy address'
