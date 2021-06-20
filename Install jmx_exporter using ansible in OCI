@@ -1,0 +1,35 @@
+- hosts: tomcat_hosts
+  name: deploy jmx_exporter to tomcat host
+  become: true
+  tasks:
+    - name: create jmx_exporter directory
+      file:
+        path:  /opt/jmx_exporter/
+        state: directory
+        owner: tomcat
+        group: tomcat
+        mode: 0775
+    - name: copy jmx_exporter
+      copy:
+        src: /var/www/html/software/wars/jmx_prometheus_javaagent-0.15.0.jar
+        dest: /opt/jmx_exporter/jmx_prometheus_javaagent-0.15.0.jar
+        owner: tomcat
+        group: tomcat
+        mode: 0664
+        follow: yes
+    - name: copy jmx_exporter configuration
+      copy:
+        src: /var/www/html/software/wars//tomcat.yml
+        dest: /opt/jmx_exporter/tomcat.yml
+        owner: tomcat
+        group: tomcat
+        mode: 0664
+        follow: yes
+    - name: configure tomcat environment
+      lineinfile:
+        path: /opt/sfw/tomcat/bin/setenv.sh
+        line: CATALINA_OPTS="$CATALINA_OPTS -javaagent:/opt/jmx_exporter/jmx_prometheus_javaagent-0.15.0.jar=9404:/opt/jmx_exporter/tomcat.yml"
+        create: yes
+        owner: tomcat
+        group: tomcat
+        mode: 0775
