@@ -1,0 +1,20 @@
+# Install java and tomcat Specefic version using Ansible, we have setup password less auth for opc user. 
+
+- hosts: all
+  user: opc
+  become: True
+  tasks:
+    - name: Install java  package
+      yum:
+        name: java-8u291.x86_64
+        state: present
+        update_cache: True
+    
+    - name: Install tomcat  package
+      yum:
+        name: tomcat-9u045.x86_64
+        state: present
+        update_cache: True  
+        
+        
+        
