@@ -1,0 +1,21 @@
+#/bin/bash
+# Script to update the pam module  to fix the sssd issue.
+# Ver 1.0  April 15-04-2021
+
+wget "your url/pam-oracle-cloud-19.3.3-2005052239-el7.zip"
+wget "your url/idcspamvalidation.sh"
+/bin/unzip pam-oracle-cloud-19.3.3-2005052239-el7.zip
+/bin/chmod +x pam_oracle_cloud_upgrade.sh  idcspamvalidation.sh
+cd dist/
+rpm -Uvh  pam_oracle-cloud-19.3.3_2005052239-1.el7.x86_64.rpm authn-oracle-cloud-19.3.3_2005052239-1.el7.x86_64.rpm
+cd ..
+./pam_oracle_cloud_upgrade.sh
+./idcspamvalidation.sh
+id -a  >> uid.log
+
+
+
+
+# we can use the following command to clear the sssd
+
+systemctl stop sssd;sss_cache -E;sss_cache -G;pkill -9 -f sssd;rm /var/lib/sss/db/*;systemctl start  sssd;systemctl status sssd
