@@ -1,0 +1,7 @@
+- hosts: test
+  become: yes
+  tasks:
+    - name: copy the script 
+      copy: src=/mnt/util/ksplice-update.sh dest=/tmp/ksplice-update.sh
+    - name: run the script 
+      shell: sh /tmp/ksplice-update.sh  > /tmp/log.txt
