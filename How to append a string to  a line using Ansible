@@ -1,0 +1,11 @@
+---
+- hosts: sukhoi
+  become: yes
+  tasks:
+  - name:  add the proxy to the uptrack.conf
+    lineinfile:
+      path: /etc/uptrack/uptrack.conf
+      regexp: "https_proxy" 
+      line: 'https_proxy= https://proxy:port'
+      state: present
+      create: yes 
