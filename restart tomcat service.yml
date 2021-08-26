@@ -1,0 +1,9 @@
+---
+ - hosts: search_server 
+   become: true
+   tasks:
+    - name: "Restart the tomcat"
+      service:
+        name: tomcat
+        enabled: yes
+        state: restarted
