@@ -1,5 +1,5 @@
 ---
- - hosts: search_server 
+ - hosts: hosts
    become: true
    tasks:
     - name: "Restart the tomcat"
