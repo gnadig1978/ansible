@@ -1,0 +1,17 @@
+---
+- name: Add multiple users
+  hosts: all
+  vars:
+    dbusers:
+      - username: sysadmin
+        pass: sysadmin@100
+      - username: apache
+        pass: apache@200
+      - username: tomcat
+        pass: tomcat@300
+  tasks: 
+    - name: Add users
+      user:
+        name: "{{ item.username }}"
+        password: "{{ item.pass | password_hash('sha256') }}"
+      loop: "{{ all }}"
