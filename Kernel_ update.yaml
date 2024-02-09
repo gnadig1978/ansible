@@ -1,0 +1,36 @@
+---
+- name: Upgrade Kernel
+  hosts: all
+  become: yes
+  tasks:
+    - name: Upgrade Kernel on CentOS
+      block:
+        - name: Update CentOS packages
+          yum:
+            name: "*"
+            state: latest
+            update_cache: yes
+          when: ansible_distribution == 'CentOS'
+
+        - name: Ensure kernel is updated
+          yum:
+            name: kernel
+            state: latest
+          when: ansible_distribution == 'CentOS'
+      when: ansible_os_family == 'RedHat'
+
+    - name: Upgrade Kernel on Ubuntu
+      block:
+        - name: Update Ubuntu packages
+          apt:
+            upgrade: dist
+            update_cache: yes
+          when: ansible_distribution == 'Ubuntu'
+
+        - name: Ensure kernel is updated
+          apt:
+            name: linux-generic
+            state: latest
+            update_cache: yes
+          when: ansible_distribution == 'Ubuntu'
+      when: ansible_os_family == 'Debian'
