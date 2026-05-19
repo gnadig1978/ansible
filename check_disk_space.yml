@@ -1,0 +1,25 @@
+---
+- name: Check Disk Space Usage
+  hosts: linux_servers
+  become: yes
+  gather_facts: yes
+
+  tasks:
+
+    - name: Display filesystem usage
+      shell: df -h
+      register: disk_output
+
+    - name: Print disk usage
+      debug:
+        msg: "{{ disk_output.stdout_lines }}"
+
+    - name: Check if root filesystem exceeds 80%
+      shell: |
+        df -h / | awk 'NR==2 {print $5}' | sed 's/%//'
+      register: root_usage
+
+    - name: Alert if disk usage exceeds threshold
+      debug:
+        msg: "WARNING: Root filesystem usage is above 80% on {{ inventory_hostname }}"
+      when: root_usage.stdout | int > 80
