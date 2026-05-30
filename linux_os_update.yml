@@ -1,0 +1,99 @@
+---
+- name: Update Linux OS and Reboot if Required
+  hosts: linux_servers
+  become: true
+  gather_facts: true
+
+  tasks:
+
+    - name: Display host information
+      debug:
+        msg: "Updating {{ inventory_hostname }} ({{ ansible_distribution }} {{ ansible_distribution_version }})"
+
+    #################################################
+    # RHEL / CentOS / Rocky / AlmaLinux / Oracle Linux
+    #################################################
+
+    - name: Update all packages on RedHat-based systems
+      dnf:
+        name: "*"
+        state: latest
+        update_cache: yes
+      register: rhel_update
+      when: ansible_os_family == "RedHat"
+
+    - name: Check if reboot is required (RedHat)
+      command: needs-restarting -r
+      register: reboot_required_rhel
+      failed_when: false
+      changed_when: false
+      when: ansible_os_family == "RedHat"
+
+    #################################################
+    # Ubuntu / Debian
+    #################################################
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+      register: debian_update
+      when: ansible_os_family == "Debian"
+
+    - name: Check reboot requirement file
+      stat:
+        path: /var/run/reboot-required
+      register: reboot_required_debian
+      when: ansible_os_family == "Debian"
+
+    #################################################
+    # Reboot Section
+    #################################################
+
+    - name: Reboot RedHat servers if required
+      reboot:
+        msg: "Reboot initiated by Ansible after OS update"
+        reboot_timeout: 1800
+      when:
+        - ansible_os_family == "RedHat"
+        - reboot_required_rhel.rc != 0
+
+    - name: Reboot Debian servers if required
+      reboot:
+        msg: "Reboot initiated by Ansible after OS update"
+        reboot_timeout: 1800
+      when:
+        - ansible_os_family == "Debian"
+        - reboot_required_debian.stat.exists
+
+    #################################################
+    # Validation
+    #################################################
+
+    - name: Wait for server to become reachable
+      wait_for_connection:
+        timeout: 600
+        delay: 10
+
+    - name: Get system uptime
+      command: uptime
+      register: uptime_result
+      changed_when: false
+
+    - name: Display uptime
+      debug:
+        var: uptime_result.stdout
+
+    - name: Verify kernel version
+      command: uname -r
+      register: kernel_version
+      changed_when: false
+
+    - name: Display kernel version
+      debug:
+        var: kernel_version.stdout
