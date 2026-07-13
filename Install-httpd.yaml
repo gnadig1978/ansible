@@ -1,0 +1,16 @@
+---
+- name: Install package based on OS
+ hosts: all
+ become: yes
+ gather_facts: yes
+ tasks:
+ - name: Install Apache on Ubuntu
+ apt:
+ name: apache2
+ state: present
+ when: ansible_facts['distribution'] == "Ubuntu"
+ - name: Install Apache on CentOS
+ yum:
+ name: httpd
+ state: present
+ when: ansible_facts['distribution'] == "CentOS"
