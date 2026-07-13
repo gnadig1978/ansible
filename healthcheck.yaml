@@ -1,0 +1,53 @@
+---
+- name: Check server resource usage
+ hosts: all
+ become: yes
+ tasks:
+ - name: Check hostname
+ command: hostname
+ register: hostname
+ - name: Display hostname
+ debug:
+ var: hostname.stdout
+ - name: Check RAM usage
+ command: free -h
+ register: memory
+ - name: Display RAM usage
+ debug:
+ var: memory.stdout_lines
+ - name: Check CPU usage
+ command: top -bn1
+ register: cpu
+ - name: Display CPU usage
+ debug:
+ var: cpu.stdout_lines
+ - name: Check disk usage
+ command: df -h
+ register: disk
+ - name: Display disk usage
+ debug:
+ var: disk.stdout_lines
+ - name: Check system uptime
+ command: uptime
+ register: uptime
+ - name: Display uptime
+ debug
+var: uptime.stdout
+ - name: Check load average
+ shell: cat /proc/loadavg
+ register: load
+ - name: Display load average
+ debug:
+ var: load.stdout
+ - name: Check logged-in users
+ command: who
+ register: users
+ - name: Display logged-in users
+ debug:
+ var: users.stdout_lines
+ - name: Check disk inode usage
+ command: df -i
+ register: inode
+ - name: Display inode usage
+ debug:
+ var: inode.stdout_lines
