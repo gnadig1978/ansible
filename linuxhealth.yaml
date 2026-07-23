@@ -1,0 +1,127 @@
+---
+- name: Linux System Health Check
+  hosts: all
+  gather_facts: true
+  become: false
+
+  vars:
+    disk_threshold: 80   # percent
+    mem_threshold: 90    # percent
+    load_threshold: 4.0  # adjust based on CPU count
+
+  tasks:
+
+    - name: Show hostname and date
+      command: date
+      register: date_out
+      changed_when: false
+
+    - debug:
+        msg: "Host: {{ inventory_hostname }} | Date: {{ date_out.stdout }}"
+
+    - name: Show system uptime
+      command: uptime
+      register: uptime_out
+      changed_when: false
+
+    - debug:
+        var: uptime_out.stdout
+
+    - name: Check CPU load average
+      shell: cat /proc/loadavg | awk '{print $1, $2, $3}'
+      register: load_out
+      changed_when: false
+
+    - debug:
+        msg: "Load average (1m 5m 15m): {{ load_out.stdout }}"
+
+    - name: Check memory usage
+      command: free -h
+      register: mem_out
+      changed_when: false
+
+    - debug:
+        var: mem_out.stdout_lines
+
+    - name: Get memory usage percentage
+      shell: free | awk '/Mem:/ {printf("%.0f", $3/$2 * 100)}'
+      register: mem_percent
+      changed_when: false
+
+    - name: Warn if memory usage is high
+      debug:
+        msg: "WARNING: Memory usage is {{ mem_percent.stdout }}% (threshold: {{ mem_threshold }}%)"
+      when: mem_percent.stdout | int > mem_threshold
+
+    - name: Check disk space
+      command: df -h
+      register: disk_out
+      changed_when: false
+
+    - debug:
+        var: disk_out.stdout_lines
+
+    - name: Get root filesystem usage percentage
+      shell: df / | awk 'NR==2 {print $5}' | tr -d '%'
+      register: disk_percent
+      changed_when: false
+
+    - name: Warn if disk usage is high
+      debug:
+        msg: "WARNING: Root disk usage is {{ disk_percent.stdout }}% (threshold: {{ disk_threshold }}%)"
+      when: disk_percent.stdout | int > disk_threshold
+
+    - name: Check current logged in user
+      command: whoami
+      register: user_out
+      changed_when: false
+
+    - debug:
+        var: user_out.stdout
+
+    - name: Check for failed systemd services
+      shell: systemctl list-units --state=failed --no-legend
+      register: failed_services
+      changed_when: false
+      failed_when: false
+
+    - name: Report failed services
+      debug:
+        msg: "Failed services detected: {{ failed_services.stdout_lines }}"
+      when: failed_services.stdout_lines | length > 0
+
+    - name: Confirm no failed services
+      debug:
+        msg: "No failed systemd services."
+      when: failed_services.stdout_lines | length == 0
+
+    - name: Check swap usage
+      shell: free | awk '/Swap:/ {print $3}'
+      register: swap_used
+      changed_when: false
+
+    - debug:
+        msg: "Swap used: {{ swap_used.stdout }} KB"
+
+    - name: Check last reboot reason (if available)
+      command: who -b
+      register: last_boot
+      changed_when: false
+      failed_when: false
+
+    - debug:
+        var: last_boot.stdout
+
+    - name: Check network connectivity (ping gateway)
+      shell: ip route | awk '/default/ {print $3}'
+      register: gateway_ip
+      changed_when: false
+
+    - name: Ping default gateway
+      command: ping -c 2 {{ gateway_ip.stdout }}
+      register: ping_result
+      changed_when: false
+      failed_when: false
+
+    - debug:
+        msg: "Gateway ping result: {{ 'OK' if ping_result.rc == 0 else 'FAILED' }}"
